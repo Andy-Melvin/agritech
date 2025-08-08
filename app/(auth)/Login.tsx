@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Image, ImageBackground, Pressable, SafeAreaView, Text, TextInput, View, StatusBar } from 'react-native'
 import BackPageButton from '@/components/buttons/backPageButton'
 import ButtonTwo from '@/components/buttons/buttonTwo'
@@ -23,14 +23,21 @@ const Login = () => {
     const [loading, setLoading] = useState(false)
     const { handleSubmit, control } = useForm<FormData>();
     const { login } = useAuth();
+    const isDemoMode = useMemo(() => process.env.EXPO_PUBLIC_DEMO_MODE === 'true', []);
 
     const onSubmit = async (data: FormData) => {
         setLoading(true)
         try {
-            const response = await unauthorizedAPI.post(`/auth/login`, data);
-            const { access_token, refresh_token, user } = response.data;
-            login(access_token, refresh_token, user);
-            router.replace('/(tabs)/Home');
+            if (isDemoMode) {
+                const mockUser = { name: 'Demo User', email: 'demo@example.com', phone: '+1234567890', role: 'demo' } as const;
+                login('demo-access-token', 'demo-refresh-token', mockUser as any);
+                router.replace('/(tabs)/Home');
+            } else {
+                const response = await unauthorizedAPI.post(`/auth/login`, data);
+                const { access_token, refresh_token, user } = response.data;
+                login(access_token, refresh_token, user);
+                router.replace('/(tabs)/Home');
+            }
         } catch (error) {
             console.error('Error posting data:', error);
         }
@@ -91,7 +98,7 @@ const Login = () => {
                         />
                     </View>
                     <View style={{ flexDirection: "row", justifyContent: "center" }} className='mt-[40px]'>
-                        <ButtonTwo name='LOG IN' onPress={handleSubmit(onSubmit)} loading={loading} />
+                        <ButtonTwo name={isDemoMode ? 'LOG IN (DEMO)' : 'LOG IN'} onPress={handleSubmit(onSubmit)} loading={loading} />
                     </View>
                     <View style={{ display: "flex", flexDirection: "row" }} className='mt-6 items-center justify-center'>
                         <Text className='text-center text-textMainColor text-[18px]'>Don't have an account?

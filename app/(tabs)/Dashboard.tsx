@@ -57,7 +57,7 @@ const Dashboard = () => {
           >
             <ActivityIndicator size="large" color="#34A853" />
           </View>
-        ) : page?.fields.length === 0 ? (
+        ) : (page?.fields?.length ?? 0) === 0 ? (
           <View
             style={{ display: "flex" }}
             className="items-center justify-center h-[100px]"
@@ -75,7 +75,7 @@ const Dashboard = () => {
               }}
               className="flex-wrap py-[20px] px-[2vh] gap-[16]"
             >
-              {page?.fields.map((field, i) => (
+              {(page?.fields ?? []).map((field, i) => (
                 <Pressable
                   key={i}
                   onPress={() => {

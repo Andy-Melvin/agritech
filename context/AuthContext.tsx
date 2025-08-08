@@ -37,10 +37,30 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);  // Loading state
   const router = useRouter();
+  const isDemoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 
   useEffect(() => {
     const fetchAuthData = async () => {
       try {
+        // Demo mode: bypass real auth and auto-sign in with mock user
+        if (isDemoMode) {
+          const mockUser: User = {
+            name: 'Demo User',
+            email: 'demo@example.com',
+            phone: '+1234567890',
+            role: 'demo',
+          };
+          const mockAccessToken = 'demo-access-token';
+          const mockRefreshToken = 'demo-refresh-token';
+
+          setUser(mockUser);
+          setToken(mockAccessToken);
+          await AsyncStorage.setItem('access_token', mockAccessToken);
+          await AsyncStorage.setItem('refresh_token', mockRefreshToken);
+          await AsyncStorage.setItem('user', JSON.stringify(mockUser));
+          return; // Skip normal storage fetch below
+        }
+
         const storedToken = await AsyncStorage.getItem('access_token');
         const savedUser = await AsyncStorage.getItem('user');
         if (storedToken && savedUser) {
@@ -75,6 +95,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const logout = async () => {
     try {
+      if (isDemoMode) {
+        // In demo mode, keep the mock session active and just navigate back to Home
+        router.replace('/(tabs)/Home');
+        return;
+      }
       await AsyncStorage.clear();
       setUser(null);
       setToken(null);
